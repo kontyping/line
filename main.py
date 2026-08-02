@@ -25,7 +25,8 @@ KEYWORDS = [
     # まどドラ / マギアエクセドラ
     "まどドラ", "マギアエクセドラ", "Magia Exedra", "魔法少女まどか☆マギカ Magia Exedra",
     # ブルーアーカイブ
-    "ブルアカ", "ブルーアーカイブ", "Blue Archive"
+    "ブルアカ", "ブルーアーカイブ", "Blue Archive",
+    "新作", "ゲーム"
 ]
 
 SENT_URLS_FILE = "sent_urls.txt"
