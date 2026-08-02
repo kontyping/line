@@ -9,13 +9,25 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LINE_ACCESS_TOKEN = os.environ.get("LINE_ACCESS_TOKEN")
 LINE_USER_ID = os.environ.get("LINE_USER_ID")
 
+# サイトを追加（4Gamer, ファミ通, AUTOMATON + Gamer, 電撃オンライン）
 RSS_URLS = [
     "https://www.4gamer.net/rss/index.xml",
     "https://www.famitsu.com/rss/fcom-all.xml",
-    "https://automaton-media.com/feed/"
+    "https://automaton-media.com/feed/",
+    "https://www.gamer.ne.jp/rss/gamer.xml",
+    "https://dengekionline.com/rss/all.xml"
 ]
 
-KEYWORDS = ["にゃんこ大戦争", "まどドラ", "マギアエクセドラ", "ブルアカ", "ブルーアーカイブ"]
+# 英語名や略称も含めたキーワード網羅リスト
+KEYWORDS = [
+    # にゃんこ大戦争
+    "にゃんこ大戦争", "にゃんこ", "The Battle Cats",
+    # まどドラ / マギアエクセドラ
+    "まどドラ", "マギアエクセドラ", "Magia Exedra", "魔法少女まどか☆マギカ Magia Exedra",
+    # ブルーアーカイブ
+    "ブルアカ", "ブルーアーカイブ", "Blue Archive"
+]
+
 SENT_URLS_FILE = "sent_urls.txt"
 MAX_NOTIFY_COUNT = 3  # 1回の通知で送る最大記事数
 
@@ -86,7 +98,8 @@ def main():
             title = entry.title
             link = entry.link
             
-            if any(keyword in title for keyword in KEYWORDS):
+            # タイトルまたは概要にキーワードが含まれているか判定
+            if any(keyword.lower() in title.lower() for keyword in KEYWORDS):
                 if link not in sent_urls:
                     candidate_articles.append({"title": title, "link": link})
 
