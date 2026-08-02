@@ -2,14 +2,14 @@ name: Game News Curator
 
 on:
   schedule:
-    - cron: '0 22 * * *' # 毎日 JST 07:00 (UTC 22:00)
-  workflow_dispatch: # 手動実行ボタンを有効化
+    - cron: '0 20 * * *' # 毎日 JST 05:00 (UTC 20:00)
+  workflow_dispatch:
 
 jobs:
   curate-and-notify:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # sent_urls.txt をコミット・プッシュするために必要
+      contents: write
 
     steps:
       - name: Checkout repository
