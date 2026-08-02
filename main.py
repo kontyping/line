@@ -1,7 +1,6 @@
 import os
 import requests
 import feedparser
-from datetime import datetime
 
 # ==========================================
 # 1. 設定と環境変数
@@ -10,34 +9,30 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LINE_ACCESS_TOKEN = os.environ.get("LINE_ACCESS_TOKEN")
 LINE_USER_ID = os.environ.get("LINE_USER_ID")
 
-# 巡回するRSSフィード（4Gamer, ファミ通, AUTOMATON）
 RSS_URLS = [
     "https://www.4gamer.net/rss/index.xml",
     "https://www.famitsu.com/rss/fcom-all.xml",
     "https://automaton-media.com/feed/"
 ]
 
-# 抽出対象のキーワード
 KEYWORDS = ["にゃんこ大戦争", "まどドラ", "マギアエクセドラ", "ブルアカ", "ブルーアーカイブ"]
 SENT_URLS_FILE = "sent_urls.txt"
+MAX_NOTIFY_COUNT = 3  # 1回の通知で送る最大記事数
 
 # ==========================================
 # 2. 関数定義
 # ==========================================
 def load_sent_urls():
-    """送信済みのURLリストを読み込む"""
     if os.path.exists(SENT_URLS_FILE):
         with open(SENT_URLS_FILE, "r", encoding="utf-8") as f:
             return set(line.strip() for line in f if line.strip())
     return set()
 
 def save_sent_url(url):
-    """送信済みのURLを保存する"""
     with open(SENT_URLS_FILE, "a", encoding="utf-8") as f:
         f.write(url + "\n")
 
 def summarize_with_groq(title, link):
-    """Groq APIを使用して記事を3行で要約する"""
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
@@ -63,7 +58,6 @@ def summarize_with_groq(title, link):
         return "要約の取得に失敗しました。"
 
 def send_line_message(text):
-    """LINE Messaging API経由でメッセージを送信する"""
     headers = {
         "Authorization": f"Bearer {LINE_ACCESS_TOKEN}",
         "Content-Type": "application/json"
@@ -83,31 +77,31 @@ def send_line_message(text):
 # ==========================================
 def main():
     sent_urls = load_sent_urls()
-    new_articles = []
+    candidate_articles = []
 
-    # RSSを巡回してキーワードに一致する新着記事を抽出
+    # 各RSSからキーワードが含まれる未送信の記事を収集
     for rss_url in RSS_URLS:
         feed = feedparser.parse(rss_url)
         for entry in feed.entries:
             title = entry.title
             link = entry.link
             
-            # キーワードが含まれており、かつ未送信のURLのみ処理
             if any(keyword in title for keyword in KEYWORDS):
                 if link not in sent_urls:
-                    new_articles.append({"title": title, "link": link})
+                    candidate_articles.append({"title": title, "link": link})
 
-    if not new_articles:
-        print("新しい通知対象の記事はありませんでした。")
+    if not candidate_articles:
+        print("未通知の対象記事はありませんでした。")
         return
 
-    # 新着記事を要約してLINEに通知
-    for article in new_articles:
+    # 未通知の記事の中から最大 MAX_NOTIFY_COUNT 件まで抽出して処理
+    target_articles = candidate_articles[:MAX_NOTIFY_COUNT]
+
+    for article in target_articles:
         print(f"Processing: {article['title']}")
         summary = summarize_with_groq(article['title'], article['link'])
         
-        # LINEに送るメッセージの組み立て
-        message = f"🎮 【ゲーム新着情報】\n{article['title']}\n\n{summary}\n\n🔗 {article['link']}"
+        message = f"🎮 【ゲーム情報】\n{article['title']}\n\n{summary}\n\n🔗 {article['link']}"
         
         send_line_message(message)
         save_sent_url(article['link'])
